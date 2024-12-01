@@ -12,7 +12,7 @@ import {
 
 const App = () => {
   const [progress , setProgress] = useState(0) 
-    const pagesize = 12;
+    const pagesize = 9;
     return (
       <div>
         <BrowserRouter>
