@@ -10,30 +10,57 @@ const News = (props) => {
   const [page, setPage] = useState(1)
   const [totalResults, setTotalResults] = useState(0)
 
-   const capatalize = (string) => {
+  const capatalize = (string) => {
   return string.charAt(0).toUpperCase() + string.slice(1);
 }
 
 
 const updatenews = async () => {
+  // props.setProgress(10);
+  // const url = `https://newsapi.org/v2/top-headlines?country=${props.country}&category=${props.category}&apikey=c717f5d04c7b41edbb6d25017ceb809b&pageSize=${props.pagesize}`;
+  // const url = `https://newsapi.org/v2/top-headlines?country=${props.country}&apiKey=c717f5d04c7b41edbb6d25017ceb809b&category=${props.category}&pageSize=${props.pagesize}`
+  // setLoading(true);
+  // let data = await fetch(url);
+  // console.log(data);
+  // props.setProgress(30);
+  // let parsedData = await data.json();
+  // console.log(parsedData)
+  // props.setProgress(70);
+  // setArticles(parsedData.articles);
+  // setTotalResults(parsedData.totalResults);
+  // setLoading(false);
+  // props.setProgress(100);
   props.setProgress(10);
-  const url = `https://newsapi.org/v2/top-headlines?country=${props.country}&category=${props.category}&apikey=1cda76cdce1345b88023d80272d546f5&pageSize=${props.pagesize}`;
-    setLoading(true);
-  let data = await fetch(url);
+const url = `https://news-api14.p.rapidapi.com/v2/trendings?topic=${props.category}&language=en&country=in&limit=${props.pagesize}&page=${page}`;
+const options = {
+	method: 'GET',
+	headers: {
+		'x-rapidapi-key': process.env.REACT_APP_API_KEY,
+		'x-rapidapi-host': 'news-api14.p.rapidapi.com'
+	}
+};
+
+try {
+  setLoading(true);
+	const response = await fetch(url, options);
   props.setProgress(30);
-  let parsedData = await data.json();
+	const result = await response.text();
+  const parsedData = JSON.parse(result);
+	console.log(parsedData);
   props.setProgress(70);
-  setArticles(parsedData.articles);
+  setArticles(parsedData.data);
   setTotalResults(parsedData.totalResults);
+  console.log(articles)
+  console.log(totalResults)
   setLoading(false);
-  // this.setState({
-  //   articles: parsedData.articles,
-  //   totalResults: parsedData.totalResults,
-  //   loading: false
-  // });
   props.setProgress(100);
+  setPage(page+1);
+} catch (error) {
+	console.error(error);
+}
 
 }
+ 
 useEffect(() => {
   document.title = `${capatalize(props.category)} - MyNewsApp` 
   updatenews();
@@ -41,30 +68,54 @@ useEffect(() => {
 }  , [])
 
  const fetchMoreData = async () => {
-  const url = `https://newsapi.org/v2/top-headlines?country=${props.country}&category=${props.category}&apikey=1cda76cdce1345b88023d80272d546f5&page=${page+1}&pageSize=${props.pagesize}`;
-  setPage(page+1)
-  let data = await fetch(url);
-  let parsedData = await data.json();
-  setArticles(articles.concat(parsedData.articles));
-  setTotalResults( parsedData.totalResults);
+  // const url = `https://newsapi.org/v2/top-headlines?country=${props.country}&category=${props.category}&apikey=c717f5d04c7b41edbb6d25017ceb809b&page=${page+1}&pageSize=${props.pagesize}`;
+  //  const url = `https://newsapi.org/v2/top-headlines?country=${props.country}&apiKey=c717f5d04c7b41edbb6d25017ceb809b&category=${props.category}&page=${page+1}&pageSize=${props.pagesize}`
+  // setPage(page+1)
+  // let data = await fetch(url);
+  // console.log(data)
+  // let parsedData = await data.json();
+  // console.log(parsedData)
+  // setArticles(articles.concat(parsedData.articles));
+  // setTotalResults( parsedData.totalResults);
+
+  const url = `https://news-api14.p.rapidapi.com/v2/trendings?topic=${props.category}&language=en&country=in&limit=${props.pagesize}&page=${page}`;
+  const options = {
+    method: 'GET',
+    headers: {
+      'x-rapidapi-key': 'd3691571c8msh6442b0b5e277e38p199764jsn7fb44f099b0a',
+      'x-rapidapi-host': 'news-api14.p.rapidapi.com'
+    }
+  };
+  
+  try {
+    setPage(page+1)
+    const response = await fetch(url, options);
+    const result = await response.text();
+    const parsedData = JSON.parse(result);
+    console.log(parsedData);
+    setArticles((prevArticles) => prevArticles.concat(parsedData.data));
+    setTotalResults(parsedData.totalResults);
+  } catch (error) {
+    console.error(error);
+  }
+
  }
   return (
     <>
       <h1 className='text-center' style={{ margin: '35px' , marginTop :'90px' }}> {capatalize(props.category)} -Top Headlines </h1>
       {/* {this.state.loading && <Spinner />} */}
       <InfiniteScroll
-    
         dataLength={articles.length}
         next={fetchMoreData}
-        hasMore={articles.length <=totalResults}
+        hasMore={articles.length <totalResults}
         loader={<Spinner />}
       >
         <div className='container'>
           <div className='row'>
             {articles.map((element) => {
               return <div className='col-md-4' key={element.url}>
-                <Newsitem title={element.title} description={element.description} url={element.urlToImage}
-                  newsurl={element.url} author={element.author} date={element.publishedAt} source={element.source.name} />
+                <Newsitem title={element.title} description={element.excerpt} url={element.thumbnail}
+                  newsurl={element.url} author={element.authors} date={element.date} source={element.publisher.name} />
               </div>
             })}
           </div>
@@ -82,7 +133,7 @@ useEffect(() => {
  }
 News.defaultPropsTypes = {
   country: "in",
-  pagesize: 10,
+  pagesize: 9,
   category: "general"
 }
 News.propTypes = {
